@@ -10,8 +10,15 @@ export default async function Start(bot: Telegraf<Context<Update>>, db: any) {
     await db.set(ctx.chat.id)('username')(username ?? 'unknown');
     await db.set(ctx.chat.id)('id')(ctx.chat.id.toString());
 
-    if (db.get(ctx.chat.id)('email') && db.get(ctx.chat.id)('email') !== '') {
-      ctx.reply("Окей, вы перезапустили бота");
+    if (await db.get(ctx.chat.id)('email') && await db.get(ctx.chat.id)('email') !== '') {
+      const subsDate = await db.get(ctx.chat.id)('subs') && await db.get(ctx.chat.id)('subs') !== '' ? new Date(db.get(ctx.chat.id)('subs')) : false;
+      ctx.reply(`Окей, вы перезапустили бота.\n\nВаша подписка ${subsDate ? `активна до ${subsDate.getDate()}.${subsDate.getMonth() + 1}.${subsDate.getFullYear()}` : "неактивна, перейдите к оплате чтобы преобрести подписку"}`, {
+        reply_markup: {
+          one_time_keyboard: true,
+          resize_keyboard: true,
+          keyboard: keyboards.AARoot()
+        }
+      });
       await db.set(ctx.chat.id)('state')('AARoot');
     }
     else {

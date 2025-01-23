@@ -4,3 +4,4 @@ export type UserScriptState =
   | "CheckPayment"
   | "AARoot"
   | "EmailChangeHandler"
+  | "PaymentHandler"

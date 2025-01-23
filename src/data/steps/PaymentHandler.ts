@@ -1,10 +1,9 @@
-import { Context, Telegraf } from "telegraf";
-import { Update } from "telegraf/typings/core/types/typegram"
 import keyboards from "../keyboards";
 import { Message } from "../../base/types";
 import { CheckException } from "../../base/check";
 import Payment from "../../base/payment";
 import Subscription from "../../base/subscription";
+import TimeSubscription from "../priceTime";
 
 export default async function PaymentHandler(onTextMessage: Message, db: any) {
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -28,10 +27,30 @@ export default async function PaymentHandler(onTextMessage: Message, db: any) {
 
     onTextMessage('PaymentRequest', async (ctx, user, set, data) => {
         if (data.text === 'Дальше') {
+            ctx.reply("Прайс-лист:\n\n1 месяц - 35€\n6 месяцев - 50€\n12 месяцев - 150€\n\nВыберите один из вариантов", {
+                reply_markup: {
+                    one_time_keyboard: true,
+                    resize_keyboard: true,
+                    keyboard: keyboards.tarifs()
+                }
+            })
+
+            await set('state')('PaymentHandler');
+        }
+        else ctx.reply("Упс... это немного не то что мы ожидали, нажмите пожалуйста на кнопку ниже!", {
+            reply_markup: {
+                one_time_keyboard: true,
+                keyboard: keyboards.next()
+            }
+        })
+    })
+
+    onTextMessage('PaymentHandler', async (ctx, user, set, data) => {
+        if (["1 месяц", "6 месяцев", "12 месяцев"].includes(data.text)){
             const pay = await Payment(db),
-                payment = await pay.CreatePayment(ctx?.chat?.id ?? -1, user.email);
+                payment = await pay.CreatePayment(ctx?.chat?.id ?? -1, user.email, data.text, ctx?.from?.language_code ?? 'ru');
             
-            await ctx.reply("Оплата", {
+            await ctx.reply("Нажмите на 'Оплатить' для оплаты\n\n(!!! ВНИМАНИЕ, используется установленный язык Telegram клиента, как ориентир вашей страны. Если установленный язык не совпадает с вашим местоположением, пожалуйста измените. ЕСЛИ вы намерены изменить язык, пожалуйста, перезапустите бот и попробуйте снова)", {
                 reply_markup: {
                     inline_keyboard: [
                         [{ text: 'Оплатить', web_app: { url: payment } }]
@@ -49,12 +68,12 @@ export default async function PaymentHandler(onTextMessage: Message, db: any) {
 
             await set('state')('CheckPayment');
         }
-        else ctx.reply("Упс... это немного не то что мы ожидали, нажмите пожалуйста на кнопку ниже!", {
+        else ctx.reply("Извините, но вам нужно выбрать один из предложенных вариантов подписки", {
             reply_markup: {
                 one_time_keyboard: true,
-                keyboard: keyboards.next()
+                keyboard: keyboards.tarifs()
             }
-        })
+        });
     })
 
     onTextMessage('CheckPayment', async (ctx, user, set, data) => {
@@ -63,7 +82,7 @@ export default async function PaymentHandler(onTextMessage: Message, db: any) {
                 subs = await Subscription(db),
                 status = await pay.CheckPayment(user['active_payment_id']);
 
-            switch (status){
+            switch (status[0]){
                 case "in-progress":
                     ctx.reply("Вам нужно оплатить вашу покупку перед тем как продолжить, нажмите кнопку оплатить выше", {
                         reply_markup: {
@@ -91,10 +110,21 @@ export default async function PaymentHandler(onTextMessage: Message, db: any) {
                         console.log(`Link message deleting error: ${e}`);
                     }
 
-                    await subs.SetSubscription(ctx?.chat?.id ?? -1, new Date(Date.now() + 30 * 24 * 60 * 60 * 1000));
-                    await ctx.reply("Оплата прошла успешно, спасибо вам за покупку")
+                    const user_subs = user.subs && user.subs !== '' ? new Date(user.subs) : false,
+                        expiredAt = user_subs ? user_subs.setMonth(user_subs.getMonth() + TimeSubscription(status[1], true)) : TimeSubscription(status[1]);
+
+                    await subs.SetSubscription(ctx?.chat?.id ?? -1, expiredAt);
+                    await ctx.reply("Оплата прошла успешно, спасибо вам за покупку");
+                    const inviteLink = await ctx.telegram.createChatInviteLink(process.env.PRIVATE_TELEGRAM_CHANNEL ?? '', {
+                        name: 'one-time-invite',
+                        member_limit: 1,
+                    });
                     const linkMessage = await ctx.reply("Переходите по ссылке ниже, чтобы получить доступ к закрытому каналу", {
-                        
+                        reply_markup: {
+                            inline_keyboard: [
+                                [{ text: 'Перейти по ссылке', url: inviteLink.invite_link }]
+                            ]
+                        }
                     })
                     await set('linkMessage')(linkMessage.message_id.toString());
                     break;

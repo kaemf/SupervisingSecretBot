@@ -1,11 +1,12 @@
 import { Telegram } from "telegraf";
-import Context from "telegraf/typings/context";
-import { Update } from "telegraf/typings/core/types/typegram";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 export default async function Subscription(redis: any){
     class Subscription {
         async CheckSubscription(userID: number){
-            const subs = redis.get(userID)('subs');
+            const subs = await redis.get(userID)('subs');
 
             if (subs && new Date(subs) < new Date()){
                 await redis.set(userID)('subs')('');
@@ -34,17 +35,16 @@ export async function RegularCheckSubscription(ctx: Telegram,  redis: any){
     const subs = await Subscription(redis);
     
     setInterval(async () => {
-        const users = await redis.getAllKeys(),
-            PrivateTelegramChannel = 'write this id by env';
+        const users = await redis.getAllKeys();
 
         for (let i = 0; i < users.length; i++){
             if (!await subs.CheckSubscription(users[i])){
                 await subs.DeleteSubscription(users[i]);
                 try {
-                    const member = await ctx.getChatMember(PrivateTelegramChannel, users[i]);
+                    const member = await ctx.getChatMember(process.env.PRIVATE_TELEGRAM_CHANNEL ?? '', users[i]);
     
                     if ('member'.includes(member.status)) {
-                        await ctx.kickChatMember(PrivateTelegramChannel, users[i]);
+                        await ctx.kickChatMember(process.env.PRIVATE_TELEGRAM_CHANNEL ?? '', users[i]);
                         const linkMessage = await redis.get(users[i])('linkMessage');
 
                         try{
@@ -64,6 +64,6 @@ export async function RegularCheckSubscription(ctx: Telegram,  redis: any){
                 }
             }
         }
-    })
+    }, 24 * 60 * 60 * 1000)
 
 }

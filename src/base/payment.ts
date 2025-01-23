@@ -1,5 +1,7 @@
 import axios from "axios";
 import dotenv from "dotenv";
+import extractNumbers from "../data/extractNumbers";
+import { offer } from "../data/offerIds";
 dotenv.config();
 
 export default async function Payment(redis: any){
@@ -7,13 +9,27 @@ export default async function Payment(redis: any){
         LAVA_API_URL = 'https://gate.lava.top';
 
     class Payment {
-        async CreatePayment(userID: number, email: string, offerId?: string){
+        private GetPaymentMethod(language: string): string[] {
+            if (language === 'ru') {
+                return [ 'RUB', 'BANK131' ]; 
+            } else if (language === 'de' || language === 'fr' || language === 'it') {
+                return [ 'EUR', 'UNLIMINT' ];
+            } else if (language === 'en') {
+                return [ 'USD', 'UNLIMINT' ]; 
+            } else {
+                return [ 'USD', 'UNLIMINT' ]; 
+            }
+        }
+
+        async CreatePayment(userID: number, email: string, offerId: string, language: string){
+            const _offerId = offer[extractNumbers(offerId)],
+                paymentMethod = this.GetPaymentMethod(language);
             try {
                 const response = await axios.post(`${LAVA_API_URL}/api/v2/invoice`, {
                     email: email,
-                    offerId: "48f8b2f7-fe4b-4145-b01f-1fdd4b0833d5",
-                    currency: "RUB",
-                    paymentMethod: "BANK131"
+                    offerId: _offerId,
+                    currency: paymentMethod[0],
+                    paymentMethod: paymentMethod[1]
                 }, {
                     headers: {
                         "X-Api-Key": API_KEY,
@@ -32,16 +48,16 @@ export default async function Payment(redis: any){
         async CheckPayment(paymentId: string){
             try {
                 const response = await axios.get(`${LAVA_API_URL}/api/v1/invoice?id=${paymentId}`, {
-                  headers: {
+                    headers: {
                     "X-Api-Key": API_KEY,
-                  },
+                    },
                 });
             
-                return response.data.status; // Возвращает статус платежа
-              } catch (error) {
+                return [ response.data.status, response.data.amountTotal.amount ];
+            } catch (error) {
                 console.error("Error to check actual payment event: ", error);
                 return "failed";
-              }
+            }
         }
     }
 

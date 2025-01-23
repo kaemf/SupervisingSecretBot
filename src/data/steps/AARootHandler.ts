@@ -3,10 +3,33 @@ import { Update } from "telegraf/typings/core/types/typegram"
 import keyboards from "../keyboards";
 import { Message } from "../../base/types";
 import { CheckException } from "../../base/check";
-import Payment from "../../base/payment";
-import Subscription from "../../base/subscription";
 
-export default async function AARootHandler(onTextMessage: Message, db: any) {
+export default async function AARootHandler(onTextMessage: Message, db: any, bot: Telegraf<Context<Update>>) {
+
+    bot.command('status', async (ctx) => {
+        const user_subs = await db.get(ctx.chat.id)('subs'),
+            subsDate = user_subs && user_subs !== '' ? new Date(user_subs) : false;
+
+        if (subsDate){
+            ctx.reply(`Ваша подписка активна до ${subsDate.getDate()}.${subsDate.getMonth() + 1}.${subsDate.getFullYear()}`, {
+                reply_markup: {
+                    one_time_keyboard: true,
+                    resize_keyboard: true,
+                    keyboard: keyboards.AARoot()
+                }
+            });
+        }
+        else ctx.reply("У вас нет активной подписки, но вы можете в любой момент её приобрести воспользовавшись кнопкой 'Перейти к оплате'", {
+            reply_markup: {
+                one_time_keyboard: true,
+                resize_keyboard: true,
+                keyboard: keyboards.AARoot()
+            }
+        });
+
+        await db.set(ctx.chat.id)('state')('AARoot');
+    })
+
     onTextMessage('AARoot', async (ctx, user, set, data) => {
         switch (data.text){
             case "Изменить почту":
@@ -15,26 +38,15 @@ export default async function AARootHandler(onTextMessage: Message, db: any) {
                 break;
 
             case "Перейти к оплате":
-                const pay = await Payment(db),
-                    payment = await pay.CreatePayment(ctx?.chat?.id ?? -1, user.email);
-                
-                await ctx.reply("Оплата", {
-                    reply_markup: {
-                        inline_keyboard: [
-                            [{ text: 'Оплатить', web_app: { url: payment } }]
-                        ]
-                    }
-                })
-    
-                await ctx.reply("После оплаты, пожалуйста, нажмите на кнопку проверки оплаты", {
+                ctx.reply("Прайс-лист:\n\n1 месяц - 35€\n6 месяцев - 50€\n12 месяцев - 150€\n\nВыберите один из вариантов", {
                     reply_markup: {
                         one_time_keyboard: true,
                         resize_keyboard: true,
-                        keyboard: keyboards.checkPayment()
+                        keyboard: keyboards.tarifs()
                     }
                 })
     
-                await set('state')('CheckPayment');
+                await set('state')('PaymentHandler');
                 break;
 
             default: 
