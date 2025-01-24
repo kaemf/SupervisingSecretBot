@@ -9,21 +9,13 @@ export default async function Payment(redis: any){
         LAVA_API_URL = 'https://gate.lava.top';
 
     class Payment {
-        private GetPaymentMethod(language: string): string[] {
-            if (language === 'ru') {
-                return [ 'RUB', 'BANK131' ]; 
-            } else if (language === 'de' || language === 'fr' || language === 'it') {
-                return [ 'EUR', 'UNLIMINT' ];
-            } else if (language === 'en') {
-                return [ 'USD', 'UNLIMINT' ]; 
-            } else {
-                return [ 'USD', 'UNLIMINT' ]; 
-            }
+        private GetPaymentMethod(typeOfPay: string): string[] {
+            return typeOfPay === "Другие банки" ? [ 'USD', 'UNLIMINT' ] : [ 'RUB', 'BANK131' ]
         }
 
-        async CreatePayment(userID: number, email: string, offerId: string, language: string){
+        async CreatePayment(userID: number, email: string, offerId: string, typeOfPay: string){
             const _offerId = offer[extractNumbers(offerId)],
-                paymentMethod = this.GetPaymentMethod(language);
+                paymentMethod = this.GetPaymentMethod(typeOfPay);
             try {
                 const response = await axios.post(`${LAVA_API_URL}/api/v2/invoice`, {
                     email: email,

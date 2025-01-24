@@ -42,6 +42,16 @@ class Keyboard{
             ]
         ]
     }
+
+    typeOfPay(){
+        return [
+            [
+                {text: "Другие банки"}
+            ],[
+                {text: "Банки для РФ"}
+            ]
+        ]
+    }
     
 }
 

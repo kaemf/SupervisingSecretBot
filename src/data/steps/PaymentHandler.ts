@@ -35,7 +35,7 @@ export default async function PaymentHandler(onTextMessage: Message, db: any) {
                 }
             })
 
-            await set('state')('PaymentHandler');
+            await set('state')('PaymentTypeRequest');
         }
         else ctx.reply("Упс... это немного не то что мы ожидали, нажмите пожалуйста на кнопку ниже!", {
             reply_markup: {
@@ -45,18 +45,44 @@ export default async function PaymentHandler(onTextMessage: Message, db: any) {
         })
     })
 
-    onTextMessage('PaymentHandler', async (ctx, user, set, data) => {
+    onTextMessage('PaymentTypeRequest', async (ctx, user, set, data) => {
         if (["1 месяц", "6 месяцев", "12 месяцев"].includes(data.text)){
-            const pay = await Payment(db),
-                payment = await pay.CreatePayment(ctx?.chat?.id ?? -1, user.email, data.text, ctx?.from?.language_code ?? 'ru');
+            await set('tarifChoosed')(data.text);
+
+            ctx.reply("Чудесно, теперь, пожалуйста выбирите банк, который наиболее соотвествует вашей карте оплаты", {
+                reply_markup: {
+                    one_time_keyboard: true,
+                    keyboard: keyboards.typeOfPay()
+                }
+            })
             
-            await ctx.reply("Нажмите на 'Оплатить' для оплаты\n\n(!!! ВНИМАНИЕ, используется установленный язык Telegram клиента, как ориентир вашей страны. Если установленный язык не совпадает с вашим местоположением, пожалуйста измените. ЕСЛИ вы намерены изменить язык, пожалуйста, перезапустите бот и попробуйте снова)", {
+            await set('state')('PaymentHandler');
+        }
+        else ctx.reply("Извините, но вам нужно выбрать один из предложенных вариантов подписки", {
+            reply_markup: {
+                one_time_keyboard: true,
+                keyboard: keyboards.tarifs()
+            }
+        })
+    })
+
+    onTextMessage('PaymentHandler', async (ctx, user, set, data) => {
+        if (data.text === 'Другие банки' || data.text === 'Банки для РФ'){
+            const load_mess = await ctx.reply("Загрузка, пожалуйста, подождите...");
+            
+            const pay = await Payment(db),
+                payment = await pay.CreatePayment(ctx?.chat?.id ?? -1, user.email, user.tarifChoosed, data.text);
+
+            
+            await ctx.reply("Нажмите на 'Оплатить', чтобы оплатить выбранную вами подписку", {
                 reply_markup: {
                     inline_keyboard: [
                         [{ text: 'Оплатить', web_app: { url: payment } }]
                     ]
                 }
             })
+
+            await ctx.deleteMessage(load_mess.message_id);
 
             await ctx.reply("После оплаты, пожалуйста, нажмите на кнопку проверки оплаты", {
                 reply_markup: {
@@ -68,10 +94,10 @@ export default async function PaymentHandler(onTextMessage: Message, db: any) {
 
             await set('state')('CheckPayment');
         }
-        else ctx.reply("Извините, но вам нужно выбрать один из предложенных вариантов подписки", {
+        else ctx.reply("Извините, но вам нужно выбрать одну из предложеных кнопок ниже", {
             reply_markup: {
                 one_time_keyboard: true,
-                keyboard: keyboards.tarifs()
+                keyboard: keyboards.typeOfPay()
             }
         });
     })

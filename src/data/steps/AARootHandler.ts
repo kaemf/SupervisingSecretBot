@@ -46,7 +46,7 @@ export default async function AARootHandler(onTextMessage: Message, db: any, bot
                     }
                 })
     
-                await set('state')('PaymentHandler');
+                await set('state')('PaymentTypeRequest');
                 break;
 
             default: 
