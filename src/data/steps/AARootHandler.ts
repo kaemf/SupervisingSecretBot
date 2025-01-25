@@ -8,9 +8,14 @@ export default async function AARootHandler(onTextMessage: Message, db: any, bot
 
     bot.command('status', async (ctx) => {
         const user_subs = await db.get(ctx.chat.id)('subs'),
-            subsDate = user_subs && user_subs !== '' ? new Date(user_subs) : false;
+            subsDate: any = user_subs && user_subs !== '' ? 
+            ( user_subs === 'unlimit' ? 'unlimit' : new Date(user_subs) ): 
+            false;
 
-        if (subsDate){
+        if (subsDate === 'unlimit') {
+            ctx.reply(`Вы имеете пожизненную подписку`);
+        }
+        else if (subsDate instanceof Date){
             ctx.reply(`Ваша подписка активна до ${subsDate.getDate()}.${subsDate.getMonth() + 1}.${subsDate.getFullYear()}`, {
                 reply_markup: {
                     one_time_keyboard: true,
@@ -31,28 +36,31 @@ export default async function AARootHandler(onTextMessage: Message, db: any, bot
     })
 
     onTextMessage('AARoot', async (ctx, user, set, data) => {
-        switch (data.text){
-            case "Изменить почту":
-                ctx.reply(`Ваш актуальный адрес электронной почты - ${user.email}\n\nВведите /status для отмены либо Введите новый адрес электронной почты`);
-                await set('state')('EmailChangeHandler');
-                break;
-
-            case "Перейти к оплате":
-                ctx.reply("Прайс-лист:\n\n1 месяц - 35€\n6 месяцев - 50€\n12 месяцев - 150€\n\nВыберите один из вариантов", {
-                    reply_markup: {
-                        one_time_keyboard: true,
-                        resize_keyboard: true,
-                        keyboard: keyboards.tarifs()
-                    }
-                })
+        if (user.subs !== 'unlimit'){
+            switch (data.text){
+                case "Изменить почту":
+                    ctx.reply(`Ваш актуальный адрес электронной почты - ${user.email}\n\nВведите /status для отмены либо Введите новый адрес электронной почты`);
+                    await set('state')('EmailChangeHandler');
+                    break;
     
-                await set('state')('PaymentTypeRequest');
-                break;
-
-            default: 
-                ctx.reply("Извините, но вам нужно выбрать одну из кнопок ниже")
-                break;
+                case "Перейти к оплате":
+                    ctx.reply("Прайс-лист:\n\n1 месяц - 35€\n6 месяцев - 50€\n12 месяцев - 150€\n\nВыберите один из вариантов", {
+                        reply_markup: {
+                            one_time_keyboard: true,
+                            resize_keyboard: true,
+                            keyboard: keyboards.tarifs()
+                        }
+                    })
+        
+                    await set('state')('PaymentTypeRequest');
+                    break;
+    
+                default: 
+                    ctx.reply("Извините, но вам нужно выбрать одну из кнопок ниже")
+                    break;
+            }
         }
+        else ctx.reply("Вы уже имеете пожизненную подспику, дальнейших действий не требуется!");
     })
 
     onTextMessage('EmailChangeHandler', async (ctx, user, set, data) => {

@@ -13,7 +13,7 @@ export default async function Subscription(redis: any){
                 return false;
             }
 
-            if (subs && new Date(subs) > new Date()){
+            if ((subs && new Date(subs) > new Date()) || (subs && subs === 'unlimit')){
                 return true;
             }
             else return false;

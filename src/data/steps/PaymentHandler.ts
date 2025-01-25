@@ -27,7 +27,7 @@ export default async function PaymentHandler(onTextMessage: Message, db: any) {
 
     onTextMessage('PaymentRequest', async (ctx, user, set, data) => {
         if (data.text === 'Дальше') {
-            ctx.reply("Прайс-лист:\n\n1 месяц - 35€\n6 месяцев - 50€\n12 месяцев - 150€\n\nВыберите один из вариантов", {
+            ctx.reply("Прайс-лист:\n\n1 месяц - 33€\n6 месяцев - 150€\nНавсегда - 777€\n\nВыберите один из вариантов", {
                 reply_markup: {
                     one_time_keyboard: true,
                     resize_keyboard: true,
@@ -46,7 +46,7 @@ export default async function PaymentHandler(onTextMessage: Message, db: any) {
     })
 
     onTextMessage('PaymentTypeRequest', async (ctx, user, set, data) => {
-        if (["1 месяц", "6 месяцев", "12 месяцев"].includes(data.text)){
+        if (["1 месяц", "6 месяцев", "Навсегда"].includes(data.text)){
             await set('tarifChoosed')(data.text);
 
             ctx.reply("Чудесно, теперь, пожалуйста выбирите банк, который наиболее соотвествует вашей карте оплаты", {
@@ -136,8 +136,13 @@ export default async function PaymentHandler(onTextMessage: Message, db: any) {
                         console.log(`Link message deleting error: ${e}`);
                     }
 
-                    const user_subs = user.subs && user.subs !== '' ? new Date(user.subs) : false,
-                        expiredAt = user_subs ? user_subs.setMonth(user_subs.getMonth() + TimeSubscription(status[1], true)) : TimeSubscription(status[1]);
+                    const user_subs = user.subs && user.subs !== '' && user.subs !== 'unlimit' ? new Date(user.subs) : false,
+                        expiredAt = 
+                            user_subs 
+                            ? 
+                            ( TimeSubscription(status[1]) === 'unlimit' ? 'unlimit' : user_subs.setMonth(user_subs.getMonth() + TimeSubscription(status[1], true)) )
+                            : 
+                            TimeSubscription(status[1]);
 
                     await subs.SetSubscription(ctx?.chat?.id ?? -1, expiredAt);
                     await ctx.reply("Оплата прошла успешно, спасибо вам за покупку");
