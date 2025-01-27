@@ -3,6 +3,7 @@ import { Update } from "telegraf/typings/core/types/typegram"
 import keyboards from "../keyboards";
 import { Message } from "../../base/types";
 import { CheckException } from "../../base/check";
+import priceList from "../priceList";
 
 export default async function AARootHandler(onTextMessage: Message, db: any, bot: Telegraf<Context<Update>>) {
 
@@ -35,6 +36,10 @@ export default async function AARootHandler(onTextMessage: Message, db: any, bot
         await db.set(ctx.chat.id)('state')('AARoot');
     })
 
+    bot.command('sysinfo', async (ctx) => {
+        ctx.reply(`Бот для контроля доступа в закрытый тгк DianaRosca\n\n<b>Версия:</b> 1.0\n\n<b>Разработчик:</b> Yaroslav Volkivskyi (TheLaidSon)\n\n<b>Telegram:</b> <a href="https://t.me/darksidecookis">@darksidecookis</a>\n<b>Instagram:</b> <a href="https://www.instagram.com/watthatt">watthatt</a>`)
+    })
+
     onTextMessage('AARoot', async (ctx, user, set, data) => {
         if (user.subs !== 'unlimit'){
             switch (data.text){
@@ -44,7 +49,7 @@ export default async function AARootHandler(onTextMessage: Message, db: any, bot
                     break;
     
                 case "Перейти к оплате":
-                    ctx.reply("Прайс-лист:\n\n1 месяц - 35€\n6 месяцев - 50€\n12 месяцев - 150€\n\nВыберите один из вариантов", {
+                    ctx.reply(priceList, {
                         reply_markup: {
                             one_time_keyboard: true,
                             resize_keyboard: true,

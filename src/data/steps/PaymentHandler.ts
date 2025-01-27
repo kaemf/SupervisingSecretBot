@@ -4,6 +4,7 @@ import { CheckException } from "../../base/check";
 import Payment from "../../base/payment";
 import Subscription from "../../base/subscription";
 import TimeSubscription from "../priceTime";
+import priceList from "../priceList";
 
 export default async function PaymentHandler(onTextMessage: Message, db: any) {
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -27,7 +28,7 @@ export default async function PaymentHandler(onTextMessage: Message, db: any) {
 
     onTextMessage('PaymentRequest', async (ctx, user, set, data) => {
         if (data.text === 'Дальше') {
-            ctx.reply("Прайс-лист:\n\n1 месяц - 33€\n6 месяцев - 150€\nНавсегда - 777€\n\nВыберите один из вариантов", {
+            ctx.reply(priceList, {
                 reply_markup: {
                     one_time_keyboard: true,
                     resize_keyboard: true,
@@ -150,7 +151,7 @@ export default async function PaymentHandler(onTextMessage: Message, db: any) {
                         name: 'one-time-invite',
                         member_limit: 1,
                     });
-                    const linkMessage = await ctx.reply("Переходите по ссылке ниже, чтобы получить доступ к закрытому каналу", {
+                    const linkMessage = await ctx.reply("Переходите по ссылке ниже, чтобы получить доступ к закрытому Telegram-каналу", {
                         reply_markup: {
                             inline_keyboard: [
                                 [{ text: 'Перейти по ссылке', url: inviteLink.invite_link }]
