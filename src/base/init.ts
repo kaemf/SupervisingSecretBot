@@ -32,6 +32,9 @@ export default async function init() {
       if ((extra || !extra) && !extra?.reply_markup) {
         finalExtra.reply_markup = { remove_keyboard: true };
       }
+      else if (extra && extra.reply_markup) {
+        finalExtra.reply_markup = {...extra.reply_markup, resize_keyboard: true};
+      }
       return originalReply.call(ctx, text, finalExtra);
     };
 

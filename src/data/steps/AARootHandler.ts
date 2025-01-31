@@ -19,16 +19,12 @@ export default async function AARootHandler(onTextMessage: Message, db: any, bot
         else if (subsDate instanceof Date){
             ctx.reply(`Ваша подписка активна до ${subsDate.getDate()}.${subsDate.getMonth() + 1}.${subsDate.getFullYear()}`, {
                 reply_markup: {
-                    one_time_keyboard: true,
-                    resize_keyboard: true,
                     keyboard: keyboards.AARoot()
                 }
             });
         }
         else ctx.reply("У вас нет активной подписки, но вы можете в любой момент её приобрести воспользовавшись кнопкой 'Перейти к оплате'", {
             reply_markup: {
-                one_time_keyboard: true,
-                resize_keyboard: true,
                 keyboard: keyboards.AARoot()
             }
         });
@@ -51,8 +47,6 @@ export default async function AARootHandler(onTextMessage: Message, db: any, bot
                 case "Перейти к оплате":
                     ctx.reply(priceList, {
                         reply_markup: {
-                            one_time_keyboard: true,
-                            resize_keyboard: true,
                             keyboard: keyboards.tarifs()
                         }
                     })

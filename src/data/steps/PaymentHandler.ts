@@ -16,7 +16,6 @@ export default async function PaymentHandler(onTextMessage: Message, db: any) {
             
             ctx.reply("Отлично, нажмите 'Дальше' для перехода к прайсу и последующей оплате", {
                 reply_markup: {
-                    one_time_keyboard: true,
                     keyboard: keyboards.next()
                 }
             });
@@ -30,8 +29,6 @@ export default async function PaymentHandler(onTextMessage: Message, db: any) {
         if (data.text === 'Дальше') {
             ctx.reply(priceList, {
                 reply_markup: {
-                    one_time_keyboard: true,
-                    resize_keyboard: true,
                     keyboard: keyboards.tarifs()
                 }
             })
@@ -40,7 +37,6 @@ export default async function PaymentHandler(onTextMessage: Message, db: any) {
         }
         else ctx.reply("Упс... это немного не то что мы ожидали, нажмите пожалуйста на кнопку ниже!", {
             reply_markup: {
-                one_time_keyboard: true,
                 keyboard: keyboards.next()
             }
         })
@@ -52,7 +48,6 @@ export default async function PaymentHandler(onTextMessage: Message, db: any) {
 
             ctx.reply("Чудесно, теперь, пожалуйста выбирите банк, который наиболее соотвествует вашей карте оплаты", {
                 reply_markup: {
-                    one_time_keyboard: true,
                     keyboard: keyboards.typeOfPay()
                 }
             })
@@ -61,7 +56,6 @@ export default async function PaymentHandler(onTextMessage: Message, db: any) {
         }
         else ctx.reply("Извините, но вам нужно выбрать один из предложенных вариантов подписки", {
             reply_markup: {
-                one_time_keyboard: true,
                 keyboard: keyboards.tarifs()
             }
         })
@@ -87,8 +81,6 @@ export default async function PaymentHandler(onTextMessage: Message, db: any) {
 
             await ctx.reply("После оплаты, пожалуйста, нажмите на кнопку проверки оплаты", {
                 reply_markup: {
-                    one_time_keyboard: true,
-                    resize_keyboard: true,
                     keyboard: keyboards.checkPayment()
                 }
             })
@@ -97,7 +89,6 @@ export default async function PaymentHandler(onTextMessage: Message, db: any) {
         }
         else ctx.reply("Извините, но вам нужно выбрать одну из предложеных кнопок ниже", {
             reply_markup: {
-                one_time_keyboard: true,
                 keyboard: keyboards.typeOfPay()
             }
         });
@@ -113,8 +104,6 @@ export default async function PaymentHandler(onTextMessage: Message, db: any) {
                 case "in-progress":
                     ctx.reply("Вам нужно оплатить вашу покупку перед тем как продолжить, нажмите кнопку оплатить выше", {
                         reply_markup: {
-                            one_time_keyboard: true,
-                            resize_keyboard: true,
                             keyboard: keyboards.checkPayment()
                         }
                     });
@@ -123,8 +112,6 @@ export default async function PaymentHandler(onTextMessage: Message, db: any) {
                 case "failed":
                     ctx.reply("Оплата не прошла либо случилась непредвиденная ошибка, обратитесь, пожалуйста, в поддержку или попробуйте позже", {
                         reply_markup: {
-                            one_time_keyboard: true,
-                            resize_keyboard: true,
                             keyboard: keyboards.checkPayment()
                         }
                     })
