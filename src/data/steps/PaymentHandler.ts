@@ -14,7 +14,7 @@ export default async function PaymentHandler(onTextMessage: Message, db: any) {
             
             await set('email')(data.text.toLowerCase());
             
-            ctx.reply("Отлично, нажмите 'Дальше' для перехода к прайсу и последующей оплате", {
+            ctx.reply("Отлично, нажмите <b><i>'Дальше'</i></b> для перехода к прайсу и последующей оплате", {
                 reply_markup: {
                     keyboard: keyboards.next()
                 }
@@ -46,7 +46,7 @@ export default async function PaymentHandler(onTextMessage: Message, db: any) {
         if (["1 месяц", "6 месяцев", "Навсегда"].includes(data.text)){
             await set('tarifChoosed')(data.text);
 
-            ctx.reply("Чудесно, теперь, пожалуйста выбирите банк, который наиболее соотвествует вашей карте оплаты", {
+            ctx.reply("Чудесно! Теперь, пожалуйста, выбирите банк, который наиболее соотвествует вашей карте оплаты", {
                 reply_markup: {
                     keyboard: keyboards.typeOfPay()
                 }
