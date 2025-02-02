@@ -2,8 +2,8 @@ import { Context, Telegraf } from "telegraf";
 import { Update } from "telegraf/typings/core/types/typegram"
 import keyboards from "../keyboards";
 import { Message } from "../../base/types";
-import { CheckException } from "../../base/check";
 import priceList from "../priceList";
+import EmailChecker from "../../base/emailHandler";
 
 export default async function AARootHandler(onTextMessage: Message, db: any, bot: Telegraf<Context<Update>>) {
 
@@ -33,7 +33,7 @@ export default async function AARootHandler(onTextMessage: Message, db: any, bot
     })
 
     bot.command('sysinfo', async (ctx) => {
-        ctx.reply(`Бот для контроля доступа в закрытый тгк DianaRosca\n\n<b>Версия:</b> 1.0\n\n<b>Разработчик:</b> Yaroslav Volkivskyi (TheLaidSon)\n\n<b>Telegram:</b> <a href="https://t.me/darksidecookis">@darksidecookis</a>\n<b>Instagram:</b> <a href="https://www.instagram.com/watthatt">watthatt</a>`)
+        ctx.reply(`Бот для контроля доступа (SuperVisingBot) в закрытый ТГК "Закрытая Зона🔞"\n\n<b>Версия:</b> 1.0\n\n<b>Разработчик:</b> Yaroslav Volkivskyi (TheLaidSon)\n\n<b>Telegram:</b> <a href="https://t.me/darksidecookis">@darksidecookis</a>\n<b>Instagram:</b> <a href="https://www.instagram.com/watthatt">watthatt</a>`)
     })
 
     onTextMessage('AARoot', async (ctx, user, set, data) => {
@@ -63,14 +63,9 @@ export default async function AARootHandler(onTextMessage: Message, db: any, bot
     })
 
     onTextMessage('EmailChangeHandler', async (ctx, user, set, data) => {
-        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-
-        if (CheckException.TextException(data) && emailRegex.test(data.text.toLowerCase())){
-                    
-            await set('email')(data.text.toLowerCase());
-            
+        if (await EmailChecker(ctx, data.text, user.email, db)){
+            await set('email')(data.text);
             ctx.reply("Ваш адрес электронной почты успешно изменен!\nДля просмотра статуса подписки - /status");
         }
-        else ctx.reply("Извините, но это мало похоже на электронную почту, попрошу вас ввести еще раз");
     })
 }

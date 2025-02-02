@@ -1,16 +1,15 @@
 import keyboards from "../keyboards";
 import { Message } from "../../base/types";
-import { CheckException } from "../../base/check";
 import Payment from "../../base/payment";
 import Subscription from "../../base/subscription";
 import TimeSubscription from "../priceTime";
 import priceList from "../priceList";
+import EmailChecker from "../../base/emailHandler";
 
 export default async function PaymentHandler(onTextMessage: Message, db: any) {
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-
+    
     onTextMessage('EmailRespond', async (ctx, user, set, data) => {
-        if (CheckException.TextException(data) && emailRegex.test(data.text.toLowerCase())){
+        if (await EmailChecker(ctx, data.text, user.email, db)){
             
             await set('email')(data.text.toLowerCase());
             
@@ -22,7 +21,6 @@ export default async function PaymentHandler(onTextMessage: Message, db: any) {
 
             await set('state')('PaymentRequest');
         }
-        else ctx.reply("Извините, но это мало похоже на электронную почту, попрошу вас ввести еще раз");
     })
 
     onTextMessage('PaymentRequest', async (ctx, user, set, data) => {
@@ -133,12 +131,12 @@ export default async function PaymentHandler(onTextMessage: Message, db: any) {
                             TimeSubscription(status[1]);
 
                     await subs.SetSubscription(ctx?.chat?.id ?? -1, expiredAt);
-                    await ctx.reply("Оплата прошла успешно, спасибо вам за покупку");
+                    await ctx.reply("Оплата прошла успешно, спасибо Вам за покупку!");
                     const inviteLink = await ctx.telegram.createChatInviteLink(process.env.PRIVATE_TELEGRAM_CHANNEL ?? '', {
                         name: 'one-time-invite',
                         member_limit: 1,
                     });
-                    const linkMessage = await ctx.reply("Переходите по ссылке ниже, чтобы получить доступ к закрытому Telegram-каналу", {
+                    const linkMessage = await ctx.reply("Нажмите на кнопку <b>'Перейти по ссылке'</b>, чтобы получить доступ к закрытому Telegram-каналу", {
                         reply_markup: {
                             inline_keyboard: [
                                 [{ text: 'Перейти по ссылке', url: inviteLink.invite_link }]
