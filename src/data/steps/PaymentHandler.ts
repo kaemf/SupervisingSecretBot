@@ -136,7 +136,7 @@ export default async function PaymentHandler(onTextMessage: Message, db: any) {
                         name: 'one-time-invite',
                         member_limit: 1,
                     });
-                    const linkMessage = await ctx.reply("Нажмите на кнопку <b>'Перейти по ссылке'</b>, чтобы получить доступ к закрытому Telegram-каналу", {
+                    const linkMessage = await ctx.reply("Добро пожаловать в мой закрытый мир🔞\nНаслыждайся🤤", {
                         reply_markup: {
                             inline_keyboard: [
                                 [{ text: 'Перейти по ссылке', url: inviteLink.invite_link }]
